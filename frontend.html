@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World by Currency</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            height: 100vh;
+            background-color: #f4f4f4;
+        }
+
+        #title {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .container {
+            text-align: center;
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+
+        #searchInput {
+            padding: 10px;
+            width: 300px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        #searchButton {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4caf50;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #searchButton:hover {
+            background-color: #45a049;
+        }
+
+        #countryList {
+            margin-top: 10px;
+            text-align: left;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 2em 2em;
+            grid-auto-flow: row;
+            justify-content: center;
+        }
+
+        .countryBox {
+            display: inline-block;
+            margin-right: 10px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .countryImage {
+            width: 100px;
+            height: auto;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .countryName {
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <h1 id="title">World by Currency</h1>
+    <div class="container">
+        <input type="text" id="searchInput" placeholder="Search by currency code (e.g., INR, EUR)">
+        <button id="searchButton">Search</button>
+        <div id="countryList"></div>
+    </div>
+
+
+    <script>
+        document.getElementById('searchButton').addEventListener('click', function () {
+            var currencyCode = document.getElementById('searchInput').value.trim().toUpperCase();
+            if (currencyCode === '') {
+                alert('Please enter a currency code.');
+                return;
+            }
+
+            fetch('https://restcountries.com/v3.1/currency/' + currencyCode)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert('Error: ' + data.error.message);
+                    } else {
+                        displayCountries(data, currencyCode);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to fetch data. Please try again later.');
+                });
+        });
+
+
+        function displayCountries(countriesData, currencyCode) {
+            var countryListContainer = document.getElementById('countryList');
+            countryListContainer.innerHTML = '';
+
+            if (countriesData.length === 0) {
+                countryListContainer.innerHTML = `<p>No countries found for the currency code ${currencyCode}.</p>`;
+            } else {
+                countriesData.forEach(countryData => {
+                    var countryName = countryData.name.common;
+                    var flagCode = countryData.flag;
+
+                    var flagImage = document.createElement('img');
+                    const characters = flagCode.split(/([\uD800-\uDBFF][\uDC00-\uDFFF])/).filter(Boolean);
+                    var n = "";
+                    for (const emojiFlag of characters) {
+                        var letter = String.fromCodePoint(emojiFlag.codePointAt(0) - 0x1F1E6 + 65);
+                        n = n + letter;
+                    }
+                    var url = `https://flagsapi.com/${n}/flat/64.png`;
+                    flagImage.src = url;
+                    flagImage.alt = countryName + ' Flag';
+                    flagImage.classList.add('countryImage');
+
+                    var countryNameElement = document.createElement('div');
+                    countryNameElement.textContent = countryName;
+                    countryNameElement.classList.add('countryName');
+
+                    var countryBox = document.createElement('div');
+                    countryBox.classList.add('countryBox');
+                    countryBox.appendChild(flagImage);
+                    countryBox.appendChild(countryNameElement);
+
+                    countryListContainer.appendChild(countryBox);
+                });
+            }
+        }
+    </script>
+
+</body>
+
+</html>
